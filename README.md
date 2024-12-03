@@ -1,6 +1,6 @@
-Express.js CRUD API with MongoDB, Redis, Kafka, and Docker
+Express.js CRUD API with MongoDB, Redis, and Docker
 
-This repository contains a Node.js application built with Express.js that performs CRUD operations using MongoDB. It also integrates Redis for caching and Kafka for message-based communication between services. The project is fully containerized using Docker and Docker Compose.
+This repository contains a Node.js application built with Express.js that performs CRUD operations using MongoDB. It also integrates Redis for caching. The project is fully containerized using Docker and Docker Compose.
 Table of Contents
 
     Getting Started
@@ -47,7 +47,6 @@ Features
 
     CRUD Operations: Perform Create, Read, Update, and Delete operations on MongoDB.
     Redis Caching: Improve performance by caching frequently accessed data.
-    Kafka Integration: Asynchronous message processing with Apache Kafka for handling events such as user creation.
     Dockerized: Easily deploy the entire stack with Docker and Docker Compose.
 
 Architecture Overview
@@ -57,8 +56,6 @@ The application is structured to follow a microservice-like architecture, using 
     Express.js: Serves as the backend API.
     MongoDB: A NoSQL database to store user and data records.
     Redis: A key-value store used as a caching layer.
-    Kafka: A message broker for event-based communication between services.
-    Zookeeper: Manages and coordinates Kafka brokers.
 
 Project Structure
 
@@ -95,24 +92,7 @@ Make sure you create the .env file before running the application.
 Running the Project
 
 
-API Endpoints
-
-    Get Token : GET /api/auth/generate
-
-    Create User: POST /api/users
-        Request Body: { "userName": "John Doe", "emailAddress": "john@example.com", "accountNumber":"12345", "identityNumber":"67890" }
-
-    Get All Users: GET /api/users
-
-    Get User by Id Number: GET /api/users/account/id/:idNumber
-
-    Get User by Account Number: GET /api/users/account/number/:accountNumber
-
-    Update User: PUT /api/users/:id
-
-    Delete User: DELETE /api/users/:id
-
-
+API Endpoints (to be add)
 
 Technologies Used
 
@@ -120,5 +100,4 @@ Technologies Used
     MongoDB as the NoSQL database
     Redis for caching
     Docker and Docker Compose for containerization
-    Zookeeper for managing Kafka brokers
 
