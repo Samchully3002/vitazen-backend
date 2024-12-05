@@ -3,7 +3,7 @@ version: '3.8'
 services:
   app:
     build: .
-    container_name: ms-yudana-betest
+    container_name: vitazen-backend
     ports:
       - "3000:3000"
     depends_on:
@@ -60,6 +60,7 @@ networks:
   kafka-network:
     driver: bridge
   app-network: 
+    driver: bridge
 
 volumes:
   mongodb_data:

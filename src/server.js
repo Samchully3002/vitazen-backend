@@ -3,6 +3,8 @@ const express = require('express');
 const connectDB = require('./config/db.js');
 const userRoutes = require('./routes/userRoute.js');
 const authRoutes = require('./routes/authRoute.js');
+const productRoute = require('./routes/productRoute.js');
+const discountRoute = require('./routes/discountRoute.js');
 require('dotenv').config();
 
 const app = express();
@@ -18,6 +20,8 @@ app.use(express.json());
 
 // Routes
 app.use('/api', userRoutes);
+app.use('/api', productRoute);
+app.use('/api', discountRoute);
 app.use('/api', authRoutes); // Generate token mockup
 
 
