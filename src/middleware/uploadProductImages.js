@@ -6,8 +6,10 @@ const fs = require('fs');
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     // Create a folder based on the product slug
-    const productSlug = req.body.slug; // Assuming slug is in the request body
-    const uploadPath = `uploads/products/${productSlug}`; // Folder will be named after the slug
+    let productDir = req.body.identityNumber; // slug is in the request body
+    productDir.replace(/^\/+/, '');
+    //const uploadPath = `uploads/products/${productSlug}`; // Folder will be named after the slug
+    const uploadPath = path.join('uploads', 'products', productDir);
 
     // Ensure the directory exists, if not, create it
     fs.mkdirSync(uploadPath, { recursive: true });
@@ -38,7 +40,7 @@ const fileFilter = (req, file, cb) => {
 const upload = multer({
   storage,
   fileFilter,
-  limits: { fileSize: 5 * 1024 * 1024 } // Max file size 5MB
+  limits: { fileSize: 20 * 1024 * 1024 } // Max file size 5MB
 });
 
 // Middleware to upload single thumbnail image and multiple images for products

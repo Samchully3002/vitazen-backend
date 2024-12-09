@@ -13,6 +13,7 @@ const productSchema = new mongoose.Schema({
   finalPrice: { type: Number},
   thumbnail: { type: String, required: true },
   images: [{ type: String }],
+  discount: { type: mongoose.Schema.Types.ObjectId, ref: 'Discount' }, // Reference to Discount
   createdAt: { type: Date, default: Date.now }
 });
 

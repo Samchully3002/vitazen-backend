@@ -26,8 +26,8 @@ Installation
     Clone the repository:
 
     bash
-
-git clone https://github.com/Samchully3002/vitazen-backend
+    
+    git clone https://github.com/Samchully3002/vitazen-backend
 
 Create a .env file in the root directory of your project based on the example below. Make sure to configure the required environment variables.
 
@@ -58,8 +58,6 @@ The application is structured to follow a microservice-like architecture, using 
     Redis: A key-value store used as a caching layer.
 
 Project Structure
-
-
 
 .
 ├── src
