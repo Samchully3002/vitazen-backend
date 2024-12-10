@@ -87,10 +87,10 @@ exports.getProductBySlug = async (req, res) => {
   const cacheKey = `prod:${slug}`;
   try {
     // Check Redis cache
-    // const cachedSlugProd = await getCache(cacheKey);
-    // if (cachedSlugProd) {
-    //   return res.status(200).json(cachedSlugProd);
-    // }
+    const cachedSlugProd = await getCache(cacheKey);
+    if (cachedSlugProd) {
+      return res.status(200).json(cachedSlugProd);
+    }
 
     // If not in cache, fetch from MongoDB
     const product = await Product
