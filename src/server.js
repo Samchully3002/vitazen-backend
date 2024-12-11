@@ -5,6 +5,8 @@ const userRoutes = require('./routes/userRoute.js');
 const authRoutes = require('./routes/authRoute.js');
 const productRoute = require('./routes/productRoute.js');
 const discountRoute = require('./routes/discountRoute.js');
+const reviewRoute = require('./routes/reviewRoute.js');
+const videoAdRoute = require('./routes/videoAdRoute.js');
 const landingPageRoute = require('./routes/landingPageRoute.js');
 require('dotenv').config();
 
@@ -26,6 +28,8 @@ connectDB();
 app.use('/api', userRoutes);
 app.use('/api', productRoute);
 app.use('/api', discountRoute);
+app.use('/api', reviewRoute);
+app.use('/api', videoAdRoute);
 app.use('/api', authRoutes); // Generate token mockup
 
 

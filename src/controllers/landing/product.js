@@ -2,6 +2,7 @@
 
 const Discount = require('../../models/discount');
 const Product = require('../../models/product');
+const ReviewWeb = require('../../models/reviewWeb');
 const { getCache, setCache } = require('../../utils/redisCache');
 
 
@@ -19,7 +20,7 @@ exports.getAllProducts = async (req, res) => {
     
         // Fetch paginated products
         const products = await Product.find()
-          .select('name slug price thumbnail')
+          .select('identityNumber name slug price thumbnail')
           .sort({ createdAt: -1 }) // Sort by creation date (newest first)
           .skip((pageNumber - 1) * limitNumber) // Skip products based on the current page
           .limit(limitNumber); // Limit products per page
@@ -66,10 +67,10 @@ exports.getProductBySlug = async (req, res) => {
   const cacheKey = `prod:${slug}`;
   try {
     // Check Redis cache
-    const cachedSlugProd = await getCache(cacheKey);
-    if (cachedSlugProd) {
-      return res.status(200).json(cachedSlugProd);
-    }
+    // const cachedSlugProd = await getCache(cacheKey);
+    // if (cachedSlugProd) {
+    //   return res.status(200).json(cachedSlugProd);
+    // }
 
     // If not in cache, fetch from MongoDB
     const product = await Product
@@ -79,13 +80,14 @@ exports.getProductBySlug = async (req, res) => {
       return res.status(404).json({ message: 'Product not found' });
     }
 
+    // Get Discount data
     const discount = await Discount.findOne({ productId: product._id, validUntil: { $gte: new Date() } });
 
-    if(!discount){
-      product.discount = [];
-    }else{
-      product.discount = discount;
-    }
+      if(!discount){
+        product.discount = [];
+      }else{
+        product.discount = discount;
+      }
 
     product.finalPrice = product.price;
     // Calculate finalPrice based on discount
@@ -97,10 +99,23 @@ exports.getProductBySlug = async (req, res) => {
       product.finalPrice = product.price;  // If no discount, set finalPrice to original price
     }
 
-    // Store fetched data in Redis
-    await setCache(cacheKey, product, 3600); // Cache for 1 hour
+    // Get Review Data
+    const reviews = await ReviewWeb.find({ productId: product._id })
+      .select('name rating reviewText photos videos createdAt')
+      .sort({ createdAt: -1 }); // Optional: Sort by newest reviews
+    
+    const reviewsData = {
+      totalItem : await ReviewWeb.countDocuments({ productId: product._id }),
+      data : reviews
+    }
 
-    res.status(200).json(product);
+    // Store fetched data in Redis
+    //await setCache(cacheKey, product, 3600); // Cache for 1 hour
+
+    res.status(200).json({
+      productData : product,
+      reviewsData
+    });
   } catch (error) {
     res.status(500).json({ message: 'Error fetching product', error: error.message });
   }

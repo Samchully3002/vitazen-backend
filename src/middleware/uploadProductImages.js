@@ -8,7 +8,7 @@ const storage = multer.diskStorage({
     // Create a folder based on the product slug
     let productDir = req.body.identityNumber; // slug is in the request body
     productDir.replace(/^\/+/, '');
-    //const uploadPath = `uploads/products/${productSlug}`; // Folder will be named after the slug
+    
     const uploadPath = path.join('uploads', 'products', productDir);
 
     // Ensure the directory exists, if not, create it
