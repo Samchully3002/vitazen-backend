@@ -11,6 +11,8 @@ const router = express.Router();
 
 
 // Home
+router.get('/home/getheroslider', homeController.getHeroSlider);
+router.get('/home/getpromosection', homeController.getPromoSection);
 router.get('/home/getproducts', homeController.getHomeProducts);
 router.get('/home/getsights', homeController.getHomeSight);
     //== review section ==/

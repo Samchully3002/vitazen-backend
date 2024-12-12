@@ -44,7 +44,7 @@ exports.adVideoStream = async (req, res) => {
   const range = req.headers.range;
 
   if (range) {
-      // Jika ada header Range, lakukan streaming parsial
+      // if header do streaming parsial
       const parts = range.replace(/bytes=/, '').split('-');
       const start = parseInt(parts[0], 10);
       const end = parts[1] ? parseInt(parts[1], 10) : fileSize - 1;
@@ -66,7 +66,7 @@ exports.adVideoStream = async (req, res) => {
 
       videoStream.pipe(res);
   } else {
-      // Jika tidak ada Range header, kirim seluruh file
+      // if no range header, sent all content
       res.writeHead(200, {
           'Content-Length': fileSize,
           'Content-Type': 'video/mp4',

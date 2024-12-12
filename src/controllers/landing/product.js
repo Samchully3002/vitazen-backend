@@ -5,6 +5,10 @@ const Product = require('../../models/product');
 const ReviewWeb = require('../../models/reviewWeb');
 const { getCache, setCache } = require('../../utils/redisCache');
 
+const moment = require('moment'); // For date formatting
+require('moment/locale/id'); // Set locale for Bahasa Indonesia
+const path = require('path');
+
 
 // Get all products
 exports.getAllProducts = async (req, res) => {
@@ -40,7 +44,13 @@ exports.getAllProducts = async (req, res) => {
                 product.discount = [];
                 product.finalPrice = product.price;  // If no discount, set finalPrice to original price
               }
+
         }
+        const formatProducts = products.map((product) => ({
+          ...product.toObject(),
+          createdAt: moment(product.createdAt).format('DD MMMM YYYY'), // Format creation date
+          thumbnail: `${req.protocol}://${req.get('host')}/uploads/products/${product.identityNumber}/${path.basename(product.thumbnail)}`,
+        }));
     
         // Calculate total pages
         const totalPages = Math.ceil(totalItems / limitNumber);
@@ -50,7 +60,7 @@ exports.getAllProducts = async (req, res) => {
           currentPage: pageNumber,
           totalPages,
           totalItems,
-          products,
+          products: formatProducts,
         });
       } catch (error) {
         res.status(500).json({
@@ -81,8 +91,8 @@ exports.getProductBySlug = async (req, res) => {
     }
 
     // Get Discount data
-    const discount = await Discount.findOne({ productId: product._id, validUntil: { $gte: new Date() } });
-
+    const discount = await Discount.findOne({ productId: product._id, validUntil: { $gte: new Date() } })
+    .select('type value validFrom validUntil');
       if(!discount){
         product.discount = [];
       }else{
@@ -103,17 +113,43 @@ exports.getProductBySlug = async (req, res) => {
     const reviews = await ReviewWeb.find({ productId: product._id })
       .select('name rating reviewText photos videos createdAt')
       .sort({ createdAt: -1 }); // Optional: Sort by newest reviews
+
+      const formattedReviews = (reviews || []).map((review) => {
+        const formattedRevImages = review.photos.map((photo) =>
+          `${req.protocol}://${req.get('host')}/${photo.replace(/\\/g, '/')}` // Format photos array
+        );
+        const formattedVideos = review.videos.map((video) => path.basename(video));
+      
+        return {
+          ...review.toObject(),
+          photos: formattedRevImages, // Replace photos with formatted URLs
+          videos: formattedVideos,
+          createdAt: moment(review.createdAt).format('DD MMMM YYYY'), // Format creation date
+        };
+      });
+
     
     const reviewsData = {
       totalItem : await ReviewWeb.countDocuments({ productId: product._id }),
-      data : reviews
+      data : formattedReviews
     }
 
     // Store fetched data in Redis
     //await setCache(cacheKey, product, 3600); // Cache for 1 hour
+    
+    const formattedImages = product.images.map((image) => 
+      `${req.protocol}://${req.get('host')}/${image.replace(/\\/g, '/')}` // Format each image path
+    );
+
+    const formatProduct = {
+      ...product.toObject(), // Convert Mongoose document to a plain object
+      createdAt: moment(product.createdAt).format('DD MMMM YYYY'), // Format creation date
+      images: formattedImages,
+      thumbnail: `${req.protocol}://${req.get('host')}/uploads/products/${product.identityNumber}/${path.basename(product.thumbnail)}`,
+    };
 
     res.status(200).json({
-      productData : product,
+      productData : formatProduct,
       reviewsData
     });
   } catch (error) {

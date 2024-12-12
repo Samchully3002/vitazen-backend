@@ -7,6 +7,10 @@ const Message = require('../../models/message');
 exports.submitMessage = async (req, res) => {
     try {
       const { name,email,body } = req.body;
+
+      if (!name || !email || !body) {
+        return res.status(400).json({ error: 'Name, email, and message are required' });
+       }
   
       // Create a new message
       const message = new Message({
@@ -14,6 +18,7 @@ exports.submitMessage = async (req, res) => {
         email,
         body,
       });
+      
   
       // Save the message
       await message.save();

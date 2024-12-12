@@ -16,9 +16,9 @@ exports.createProduct = async (req, res) => {
        const { identityNumber, name, brand, slug, manufacture, description, price } = req.body;
 
       // Validasi
-        // if (!name || !price || !thumbnail) {
-        //  return res.status(400).json({ error: 'Name, price, and thumbnail are required' });
-        // }
+        if (!name || !price || !thumbnail) {
+         return res.status(400).json({ error: 'Name, price, and thumbnail are required' });
+        }
 
           if (err) {
             return res.status(400).json({ message: err.message });
