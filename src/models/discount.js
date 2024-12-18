@@ -3,8 +3,9 @@
 const mongoose = require('mongoose');
 
 const discountSchema = new mongoose.Schema({
-    productId: { type: mongoose.Schema.Types.ObjectId, ref: 'Product', required: true },
+    products: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Product' }],
     type: { type: String, enum: ['percentage', 'fixed'], required: true },
+    name: { type: String, required: true },
     value: { type: Number, required: true },
     validFrom: { type: Date, required: false },
     validUntil: { type: Date, required: false }

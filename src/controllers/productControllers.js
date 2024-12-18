@@ -5,6 +5,9 @@ const Discount = require('../models/discount');
 const uploadProductImages = require('../middleware/uploadProductImages');
 const generateSlug = require('../middleware/slug');
 const { getCache, setCache } = require('../utils/redisCache');
+const moment = require('moment'); // For date formatting
+require('moment/locale/id'); // Set locale for Bahasa Indonesia
+
 
 // Create a new product
 exports.createProduct = async (req, res) => {
@@ -16,7 +19,7 @@ exports.createProduct = async (req, res) => {
        const { identityNumber, name, brand, slug, manufacture, description, price } = req.body;
 
       // Validasi
-        if (!name || !price || !thumbnail) {
+        if (!name || !price ) {
          return res.status(400).json({ error: 'Name, price, and thumbnail are required' });
         }
 
@@ -52,33 +55,64 @@ exports.createProduct = async (req, res) => {
   }
 };
 
-// Get all product
-exports.getAllProduct = async (req, res) => {
+// Get all products
+exports.getAllProducts = async (req, res) => {
   try {
-    // Fetch all products with selected fields
-    let products = await Product.find().select('name slug price thumbnail createdAt');
+      const { page , limit } = req.body;
+  
+      // Convert `page` and `limit` to numbers
+      const pageNumber = parseInt(page);
+      const limitNumber = parseInt(limit);
+  
+      // Calculate the total number of documents
+      const totalItems = await Product.countDocuments();
+  
+      // Fetch paginated products
+      const products = await Product.find()
+        .select('identityNumber name brand manufacture description price')
+        .sort({ createdAt: -1 }) // Sort by creation date (newest first)
+        .skip((pageNumber - 1) * limitNumber) // Skip products based on the current page
+        .limit(limitNumber); // Limit products per page
 
-    // Iterate over all products to apply discount logic
-    for (let product of products) {
-      // Get the current discount for the product
-      const discount = await Discount.findOne({ productId: product._id, validUntil: { $gte: new Date() } });
-      product.finalPrice = product.price;
-      // Calculate finalPrice based on discount
-      if (discount) {
-        product.finalPrice = discount.type === 'percentage'
-          ? product.price - (product.price * discount.value) / 100
-          : product.price - discount.value;
-      } else {
-        product.finalPrice = product.price;  // If no discount, set finalPrice to original price
+      // Fetch Discount for Products
+      for (let product of products) {
+          // Get the current discount for the product
+          const discount = await Discount.findOne({ products: product._id, validUntil: { $gte: new Date() } });
+          product.finalPrice = product.price;
+
+          if (discount) {
+              product.finalPrice = discount.type === 'percentage'
+                ? product.price - (product.price * discount.value) / 100
+                : product.price - discount.value;
+              product.discount = discount;
+            } else {
+              product.discount = [];
+              product.finalPrice = product.price;  // If no discount, set finalPrice to original price
+            }
+
       }
+      const formatProducts = products.map((product) => ({
+        ...product.toObject(),
+        createdAt: moment(product.createdAt).format('DD MMMM YYYY'), // Format creation date
+      }));
+  
+      // Calculate total pages
+      const totalPages = Math.ceil(totalItems / limitNumber);
+  
+      res.status(200).json({
+        success: true,
+        currentPage: pageNumber,
+        totalPages,
+        totalItems,
+        products: formatProducts,
+      });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        message: 'Error fetching products for landing page',
+        error: error.message,
+      });
     }
-
-    // Return the products
-    res.status(200).json(products);
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: error.message });
-  }
 };
 
 // Get product by slug name / url
