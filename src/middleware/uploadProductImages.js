@@ -46,7 +46,8 @@ const upload = multer({
 // Middleware to upload single thumbnail image and multiple images for products
 const uploadProductImages = upload.fields([
   { name: 'thumbnail', maxCount: 1 }, // Only 1 thumbnail
-  { name: 'images', maxCount: 5 }      // Up to 5 additional images
+  { name: 'images', maxCount: 5 },     // Up to 5 additional images
+  { name: 'detailProduct', maxCount: 1 }      // Only one product details
 ]);
 
 module.exports = uploadProductImages;

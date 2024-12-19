@@ -3,6 +3,7 @@
 const Discount = require('../../models/discount');
 const Product = require('../../models/product');
 const ReviewWeb = require('../../models/reviewWeb');
+const Marketplace = require('../../models/marketplace');
 const { getCache, setCache } = require('../../utils/redisCache');
 
 const moment = require('moment'); // For date formatting
@@ -93,21 +94,30 @@ exports.getProductBySlug = async (req, res) => {
     // Get Discount data
     const discount = await Discount.findOne({ productId: product._id, validUntil: { $gte: new Date() } })
     .select('type value validFrom validUntil');
-      if(!discount){
-        product.discount = [];
-      }else{
-        product.discount = discount;
-      }
-
+     
     product.finalPrice = product.price;
     // Calculate finalPrice based on discount
-    if (discount) {
+    if(!discount){
+      product.discount = [];
+      product.finalPrice = product.price;  // If no discount, set finalPrice to original price
+    }else{
+      product.discount = discount;
       product.finalPrice = discount.type === 'percentage'
         ? product.price - (product.price * discount.value) / 100
         : product.price - discount.value;
-    } else {
-      product.finalPrice = product.price;  // If no discount, set finalPrice to original price
     }
+
+     // detail product area
+     const market = await Marketplace.findOne({ productId: product._id })
+     .select('shopee tokopedia');;
+
+     if(!market){
+       product.marketplace = [];
+     }else{
+       product.marketplace = market;
+     }
+
+    
 
     // Get Review Data
     const reviews = await ReviewWeb.find({ productId: product._id })
@@ -146,6 +156,7 @@ exports.getProductBySlug = async (req, res) => {
       createdAt: moment(product.createdAt).format('DD MMMM YYYY'), // Format creation date
       images: formattedImages,
       thumbnail: `${req.protocol}://${req.get('host')}/uploads/products/${product.identityNumber}/${path.basename(product.thumbnail)}`,
+      detailProduct: `${req.protocol}://${req.get('host')}/uploads/products/${product.identityNumber}/${path.basename(product.detailProduct)}`
     };
 
     res.status(200).json({
