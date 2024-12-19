@@ -92,8 +92,8 @@ exports.getProductBySlug = async (req, res) => {
     }
 
     // Get Discount data
-    const discount = await Discount.findOne({ productId: product._id, validUntil: { $gte: new Date() } })
-    .select('type value validFrom validUntil');
+    const discount = await Discount.findOne({ products: product._id, validUntil: { $gte: new Date() } })
+    .select('name type value');
      
     product.finalPrice = product.price;
     // Calculate finalPrice based on discount
@@ -109,7 +109,7 @@ exports.getProductBySlug = async (req, res) => {
 
      // detail product area
      const market = await Marketplace.findOne({ productId: product._id })
-     .select('shopee tokopedia');;
+     .select('shopee tokopedia');
 
      if(!market){
        product.marketplace = [];

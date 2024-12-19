@@ -8,68 +8,82 @@ const generateSlug = require('../middleware/slug');
 const { getCache, setCache } = require('../utils/redisCache');
 const moment = require('moment'); // For date formatting
 require('moment/locale/id'); // Set locale for Bahasa Indonesia
+const fs = require('fs');
 
 
 // Create a new product
 exports.createProduct = async (req, res) => {
   try {
-
-    uploadProductImages(req, res, async (err) =>{
-      
-    generateSlug(req, res, async () => {
-       const { identityNumber, name, brand, slug, manufacture, description, price, shopee, tokopedia } = req.body;
-
-      // Validasi
-        if (!name || !price ) {
-         return res.status(400).json({ error: 'Name, price, and thumbnail are required' });
-        }
-
-          if (err) {
-            return res.status(400).json({ message: err.message });
-          }
-
-     // Extract the image URLs from the request
-      const thumbnail = req.files.thumbnail ? req.files.thumbnail[0].path : null; // Assuming the thumbnail is single
-      const images = req.files.images ? req.files.images.map(file => file.path) : []; // For multiple images
-      const detailProduct = req.files.detailProduct ? req.files.detailProduct[0].path : null; // Assuming the thumbnail is single
-      const product = new Product({ 
-        identityNumber: identityNumber,
-        name: name,
-        slug: slug,
-        price: price,
-        brand: brand,
-        manufacture: manufacture,
-        description: description,
-        thumbnail, // Save the thumbnail path
-        images,    // Save the images paths,
-        detailProduct,
-        createdAt: new Date()
-       });
-
-      
-      // Save the product to the database 
-      const savedProduct = await product.save();
-
-      if(shopee || tokopedia){
-        const marketplace = new Marketplace({ 
-          productId: savedProduct._id,
-          shopee: shopee,
-          tokopedia: tokopedia,
-          createdAt: new Date()
-         });
-         
-         await marketplace.save();
+    // Handle file uploads and slug generation sequentially
+    uploadProductImages(req, res, async (err) => {
+      if (err) {
+        return res.status(400).json({ message: err.message });
       }
 
-      // Respond with the newly created product
-      res.status(201).json(product);
+      generateSlug(req, res, async () => {
+        const {
+          identityNumber,
+          name,
+          brand,
+          slug,
+          manufacture,
+          description,
+          price,
+          shopee,
+          tokopedia
+        } = req.body;
 
+        // Validation
+        if (!name || !price) {
+          return res.status(400).json({ error: 'Name and price are required' });
+        }
+
+        // Extract image URLs from the request
+        const thumbnail = req.files.thumbnail ? req.files.thumbnail[0].path : null; // Assuming single thumbnail
+        const images = req.files.images ? req.files.images.map(file => file.path) : []; // Multiple images
+        const detailProduct = req.files.detailProduct ? req.files.detailProduct[0].path : null; // Single detail product image
+
+        // Construct product object
+        const product = new Product({
+          identityNumber,
+          name,
+          slug,
+          price,
+          brand,
+          manufacture,
+          description,
+          thumbnail,
+          images,
+          detailProduct,
+          createdAt: new Date()
+        });
+
+        // Save the product to the database
+        const savedProduct = await product.save();
+
+        // Handle marketplace data if provided
+        if (shopee || tokopedia) {
+          const marketplace = new Marketplace({
+            productId: savedProduct._id,
+            shopee,
+            tokopedia,
+            createdAt: new Date()
+          });
+          await marketplace.save();
+        }
+
+        // Respond with the newly created product
+        res.status(201).json({
+          message: 'Product created successfully',
+          product: savedProduct
+        });
       });
     });
   } catch (error) {
-    res.status(400).json({ error: error.message });
+    res.status(500).json({ error: error.message });
   }
 };
+
 
 // Get all products
 exports.getAllProducts = async (req, res) => {
@@ -188,11 +202,115 @@ exports.getProductBySlug = async (req, res) => {
 
 
 // Update Product By Id
-exports.updateById = async (req, res) => {
+exports.editProduct = async (req, res) => {
+  try {
+    const productId = req.params.id;
 
+    // Upload new images if provided
+    uploadProductImages(req, res, async (err) => {
+      if (err) {
+        return res.status(400).json({ message: err.message });
+      }
+
+      // Extract updated data
+      const { name, brand, manufacture, description, price, shopee, tokopedia } = req.body;
+
+      // Validation
+      if (!name || !price) {
+        return res.status(400).json({ error: 'Name and price are required' });
+      }
+
+      // Update images if provided
+      const updatedFields = {
+        name,
+        brand,
+        manufacture,
+        description,
+        price,
+        updatedAt: new Date(),
+      };
+
+      if (req.files.thumbnail) {
+        updatedFields.thumbnail = req.files.thumbnail[0].path;
+      }
+
+      if (req.files.images) {
+        updatedFields.images = req.files.images.map(file => file.path);
+      }
+
+      if (req.files.detailProduct) {
+        updatedFields.detailProduct = req.files.detailProduct[0].path;
+      }
+
+      // Update product in the database
+      const updatedProduct = await Product.findByIdAndUpdate(productId, updatedFields, { new: true });
+
+      // Update or create marketplace data
+      if (shopee || tokopedia) {
+        await Marketplace.findOneAndUpdate(
+          { productId },
+          { shopee, tokopedia, updatedAt: new Date() },
+          { upsert: true, new: true }
+        );
+      }
+
+      if (!updatedProduct) {
+        return res.status(404).json({ error: 'Product not found' });
+      }
+
+      res.status(200).json(updatedProduct);
+    });
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
 };
+
 
 // Delete Product By Id 
-exports.deleteProductById = async (req, res) => {
+exports.deleteProduct = async (req, res) => {
+  try {
+    const productId = req.params.id;
 
+    // Find the product by ID
+    const product = await Product.findById(productId);
+    console.log(product);
+    if (!product) {
+      return res.status(404).json({ error: 'Product not found' });
+    }
+
+    // Delete associated files
+    const deleteFile = (filePath) => {
+      if (filePath && fs.existsSync(filePath)) {
+        fs.unlink(filePath, (err) => {
+          if (err) {
+            console.error(`Failed to delete file: ${filePath}`, err);
+          }
+        });
+      }
+    };
+
+    deleteFile(product.thumbnail);
+    deleteFile(product.detailProduct);
+    if (product.images && product.images.length > 0) {
+      product.images.forEach(imagePath => deleteFile(imagePath));
+    }
+
+    // Delete the product
+    await Product.findByIdAndDelete(productId);
+
+    // Delete associated marketplace data
+    await Marketplace.deleteOne({ productId });
+    
+    // Remove the product from any discounts it is associated with
+    await Discount.updateMany(
+      { products: productId },
+      { $pull: { products: productId } }
+    );
+    
+
+    res.status(200).json({ message: 'Product and associated files deleted successfully' });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
 };
+
