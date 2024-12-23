@@ -1,6 +1,6 @@
 const express = require('express');
 const upload = require('../middleware/uploadBlog'); // upload image middleware
-const { createPost, editPost, deletePost, getAllSight } = require('../controllers/vsightControllers');
+const { createPost, editPost, deletePost, getAllSight, getSightById } = require('../controllers/vsightControllers');
 
 const router = express.Router();
 
@@ -12,6 +12,8 @@ router.post(
   ]),
   createPost
 );
+
+router.get('/vsight/:id', getSightById);
 
 // Edit Vsight Post
 router.put('/vsight/:id', upload.single('image'), editPost);

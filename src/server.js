@@ -13,6 +13,7 @@ const contactRoute = require('./routes/contactusRoute.js');
 const landingPageRoute = require('./routes/landingPageRoute.js');
 require('dotenv').config();
 const path = require('path');
+const cors = require('cors');
 
 const app = express();
 
@@ -21,6 +22,9 @@ app.use('/uploads', express.static('uploads'));
 
 // Middleware JSON
 app.use(express.json());
+
+// Enable CORS for requests from localhost:5000
+app.use(cors({ origin: 'http://localhost:5000' }));
 
 // Middleware form-urlencoded
 app.use(express.urlencoded({ extended: true }));

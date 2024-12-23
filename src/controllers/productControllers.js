@@ -9,6 +9,7 @@ const { getCache, setCache } = require('../utils/redisCache');
 const moment = require('moment'); // For date formatting
 require('moment/locale/id'); // Set locale for Bahasa Indonesia
 const fs = require('fs');
+const path = require('path');
 
 
 // Create a new product
@@ -151,10 +152,10 @@ exports.getProductBySlug = async (req, res) => {
   const cacheKey = `prod:${slug}`;
   try {
     // Check Redis cache
-    const cachedSlugProd = await getCache(cacheKey);
-    if (cachedSlugProd) {
-      return res.status(200).json(cachedSlugProd);
-    }
+    //const cachedSlugProd = await getCache(cacheKey);
+    // if (cachedSlugProd) {
+    //   return res.status(200).json(cachedSlugProd);
+    // }
 
     // If not in cache, fetch from MongoDB
     const product = await Product
@@ -163,6 +164,18 @@ exports.getProductBySlug = async (req, res) => {
     if (!product) {
       return res.status(404).json({ message: 'Product not found' });
     }
+    
+    const formattedImages = product.images.map((image) => 
+          `${req.protocol}://${req.get('host')}/${image.replace(/\\/g, '/')}` // Format each image path
+        );
+    
+        const formatProduct = {
+          ...product.toObject(), // Convert Mongoose document to a plain object
+          createdAt: moment(product.createdAt).format('DD MMMM YYYY'), // Format creation date
+          images: formattedImages,
+          thumbnail: `${req.protocol}://${req.get('host')}/uploads/products/${product.identityNumber}/${path.basename(product.thumbnail)}`,
+          detailProduct: `${req.protocol}://${req.get('host')}/uploads/products/${product.identityNumber}/${path.basename(product.detailProduct)}`
+        };
 
     // discount area
 
@@ -170,13 +183,13 @@ exports.getProductBySlug = async (req, res) => {
     product.finalPrice = product.price;
     
     if(!discount){
-      product.discount = [];
-      product.finalPrice = product.price;  // If no discount, set finalPrice to original price
+      formatProduct.discount = [];
+      formatProduct.finalPrice = product.price;  // If no discount, set finalPrice to original price
     }else{
-      product.discount = discount;
-      product.finalPrice = discount.type === 'percentage'
-        ? product.price - (product.price * discount.value) / 100
-        : product.price - discount.value;
+      formatProduct.discount = discount;
+      formatProduct.finalPrice = discount.type === 'percentage'
+        ? formatProduct.price - (formatProduct.price * discount.value) / 100
+        : formatProduct.price - discount.value;
     }
 
     
@@ -186,15 +199,15 @@ exports.getProductBySlug = async (req, res) => {
     const market = await Marketplace.findOne({ productId: product._id });
 
     if(!market){
-      product.marketplace = [];
+      formatProduct.marketplace = [];
     }else{
-      product.marketplace = market;
+      formatProduct.marketplace = market;
     }
   
     // Store fetched data in Redis
-    await setCache(cacheKey, product, 3600); // Cache for 1 hour
+   // await setCache(cacheKey, formatProduct, 3600); // Cache for 1 hour
 
-    res.status(200).json(product);
+    res.status(200).json(formatProduct);
   } catch (error) {
     res.status(500).json({ message: 'Error fetching product', error: error.message });
   }

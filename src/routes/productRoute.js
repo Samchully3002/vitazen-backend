@@ -7,9 +7,9 @@ const generateSlug = require('../middleware/slug.js');
 
 const router = express.Router();
 
-router.post('/products',authenticateJWT, productController.createProduct);
-router.put('/products/:id',authenticateJWT, productController.editProduct);
-router.delete('/products/:id',authenticateJWT, productController.deleteProduct);
+router.post('/products', productController.createProduct);
+router.put('/products/:id', productController.editProduct);
+router.delete('/products/:id', productController.deleteProduct);
 router.get('/products', productController.getAllProducts);
 router.get('/products/:slug', productController.getProductBySlug);
 

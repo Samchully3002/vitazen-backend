@@ -1,14 +1,9 @@
-// /routes/authRoute.js
-
+// routes/authRoutes.js
 const express = require('express');
-const jwt = require('jsonwebtoken');
 const router = express.Router();
+const authController = require('../controllers/authController');
 
-// Route to generate a test JWT token
-router.post('/auth/generate', (req, res) => {
-  const user = { id: 11, username: 'Dana' }; // mock user data
-  const token = jwt.sign(user, process.env.JWT_SECRET, { expiresIn: '3h' });
-  res.json({ token });
-});
+// Define the login route
+router.post('/auth/login', authController.login);
 
 module.exports = router;

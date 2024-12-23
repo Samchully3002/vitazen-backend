@@ -87,3 +87,91 @@ exports.getAllDiscount = async (req, res) => {
       res.status(500).json({ message: error.message });
     }
   };
+
+  // Edit discounts
+  exports.editDiscount = async (req, res) => {
+    try {
+      const { id } = req.params; // Discount ID from route parameters
+      const { productIds, value, type, validFrom, validUntil, name } = req.body;
+  
+      // Find the discount to update
+      const discount = await Discount.findById(id);
+      if (!discount) {
+        return res.status(404).json({ message: 'Discount not found' });
+      }
+  
+      // Validate product IDs
+      let validProductIds = [];
+      for (let productId of productIds) {
+        const product = await Product.findById(productId);
+        if (product) {
+          validProductIds.push(productId);
+        } else {
+          console.warn(`Product with ID ${productId} not found.`);
+        }
+      }
+  
+      // Update the discount fields
+      discount.products = validProductIds;
+      discount.value = value;
+      discount.type = type;
+      discount.name = name;
+      discount.validFrom = validFrom;
+      discount.validUntil = validUntil;
+  
+      // Save the updated discount
+      await discount.save();
+  
+      return res.status(200).json({
+        message: 'Discount updated successfully',
+        discount,
+      });
+    } catch (error) {
+      console.error(error);
+      return res.status(500).json({ message: error.message });
+    }
+  };
+
+  // Delete discounts
+  exports.deleteDiscount = async (req, res) => {
+    try {
+      const { id } = req.params; // Discount ID from route parameters
+  
+      // Find and delete the discount
+      const discount = await Discount.findByIdAndDelete(id);
+  
+      if (!discount) {
+        return res.status(404).json({ message: 'Discount not found' });
+      }
+  
+      return res.status(200).json({
+        message: 'Discount deleted successfully',
+      });
+    } catch (error) {
+      console.error(error);
+      return res.status(500).json({ message: error.message });
+    }
+  };
+
+
+  // Discount by ID
+exports.getDiscountById = async (req, res) => {
+  try {
+    const { id } = req.params; // Discount ID from route parameters
+
+    // Find the discount by ID
+    const discount = await Discount.findById(id);
+
+    if (!discount) {
+      return res.status(404).json({ message: 'Discount not found' });
+    }
+
+    return res.status(200).json({
+      message: 'Discount retrieved successfully',
+      discount,
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: error.message });
+  }
+};

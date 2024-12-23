@@ -4,6 +4,7 @@ const Promotion = require('../models/promotion');
 const moment = require('moment'); // For date formatting
 require('moment/locale/id'); // Set locale for Bahasa Indonesia
 const path = require('path');
+const fs = require('fs');
 
 
 // Create new promotion [hero|banner]
@@ -25,6 +26,97 @@ exports.createPromo = async (req, res) => {
     res.status(201).json({ message: 'Promotion added successfully', newPromo });
   } catch (error) {
     res.status(500).json({ message: 'Error saving promotion', error: error.message });
+  }
+};
+
+// Edit Promotion
+exports.editPromo = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { title, subtitle, textBtn, linkBtn, active, type } = req.body;
+
+    const promo = await Promotion.findById(id);
+    if (!promo) {
+      return res.status(404).json({ message: 'Promotion not found' });
+    }
+
+
+    // Update fields
+
+    const updatedFields = {
+      title,
+      subtitle,
+      textBtn,
+      linkBtn,
+      active,
+      type,
+      updatedAt: new Date(),
+    };
+
+    // if (req.files.image) {
+    //   updatedFields.thumbnail = req.files.thumbnail[0].path;
+    // }
+
+
+
+    const updatedPromotion = await Promotion.findByIdAndUpdate(id, updatedFields, { new: true });
+
+    res.status(200).json({ message: 'Promotion updated successfully', promo });
+  } catch (error) {
+    res.status(500).json({ message: 'Error updating promotion', error: error.message });
+  }
+};
+
+// Delete Promotion
+exports.deletePromo = async (req, res) => {
+    try {
+          const { id } = req.params; // Discount ID from route parameters
+      
+          // Find and delete the discount
+          const promo = await Promotion.findByIdAndDelete(id);
+      
+          if (!promo) {
+            return res.status(404).json({ message: 'Promotion not found' });
+          }
+      
+          return res.status(200).json({
+            message: 'Promotion deleted successfully',
+          });
+        } catch (error) {
+          console.error(error);
+          return res.status(500).json({ message: error.message });
+        }
+};
+
+exports.getPromotionById = async (req, res) => {
+  try {
+    const { id } = req.params;  // Get the ID from the request parameters
+
+    // Find the promotion with the provided ID
+    const promotion = await Promotion.findById(id);
+
+    if (!promotion) {
+      return res.status(404).json({
+        success: false,
+        message: 'Hero banner not found',
+      });
+    }
+
+    // Format the promotion data before sending the response
+    const formattedPromotion = {
+      ...promotion.toObject(),
+      createdAt: moment(promotion.createdAt).format('DD MMMM YYYY'), // Format the creation date
+      image: `${req.protocol}://${req.get('host')}/uploads/banner/${path.basename(promotion.image)}`, // Construct image URL
+    };
+
+    // Return the response with the formatted promotion
+    res.status(200).json({
+      success: true,
+      promotion: formattedPromotion,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: error.message });
   }
 };
 

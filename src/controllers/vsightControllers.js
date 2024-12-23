@@ -18,10 +18,10 @@ exports.getAllSight = async (req, res) => {
       const limitNumber = parseInt(limit);
   
       // Calculate the total number of documents
-      const totalItems = await Vsight.countDocuments({active:true});
+      const totalItems = await Vsight.countDocuments();
   
       // Fetch paginated products
-      const vsights = await Vsight.find({active:true})
+      const vsights = await Vsight.find()
         .select('title slug body image')
         .sort({ createdAt: -1 }) // Sort by creation date (newest first)
         .skip((pageNumber - 1) * limitNumber) // Skip products based on the current page
@@ -51,6 +51,36 @@ exports.getAllSight = async (req, res) => {
       });
     }
 };
+
+
+// Get all sight
+exports.getSightById = async (req, res) => {
+  try {
+
+      const { id } = req.params;
+    
+      // Fetch paginated products
+      const vsight = await Vsight.findById(id);
+
+        const formatVsight = {
+                  ...vsight.toObject(), // Convert Mongoose document to a plain object
+                  createdAt: moment(vsight.createdAt).format('DD MMMM YYYY'), // Format creation date
+                  image: `${req.protocol}://${req.get('host')}/uploads/blog/${path.basename(vsight.image)}`,
+                };
+  
+      res.status(200).json({
+        success: true,
+        vsight:formatVsight,
+      });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        message: 'Error fetching vsight for landing page',
+        error: error.message,
+      });
+    }
+};
+
 
 // Create new blog post
 exports.createPost = async (req, res) => {
