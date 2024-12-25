@@ -9,16 +9,17 @@ require('moment/locale/id'); // Set locale for Bahasa Indonesia
 // Create Discount
 exports.createDiscount = async (req, res) => {
     try {
-      const { productIds, value, type, validFrom, validUntil, name } = req.body;
+      const { products, value, type, validFrom, validUntil, name } = req.body;
   
       // Array to hold valid product IDs
       let validProductIds = [];
 
       // Check if each product ID exists
-      for (let productId of productIds) {
-        const product = await Product.findById(productId);
+      for (let productId of products) {
+        console.log(productId);
+        const product = await Product.findOne({identityNumber:productId});
         if (product) {
-          validProductIds.push(productId);  // Add valid product IDs to the array
+          validProductIds.push(product._id);  // Add valid product IDs to the array
         } else {
           // Handle invalid product ID (optional)
           console.warn(`Product with ID ${productId} not found.`);
@@ -92,21 +93,25 @@ exports.getAllDiscount = async (req, res) => {
   exports.editDiscount = async (req, res) => {
     try {
       const { id } = req.params; // Discount ID from route parameters
-      const { productIds, value, type, validFrom, validUntil, name } = req.body;
+      const { products, value, type, validFrom, validUntil, name } = req.body;
   
       // Find the discount to update
       const discount = await Discount.findById(id);
       if (!discount) {
         return res.status(404).json({ message: 'Discount not found' });
       }
+
+      // Array to hold valid product IDs
+      let validProductIds = [];
   
       // Validate product IDs
-      let validProductIds = [];
-      for (let productId of productIds) {
-        const product = await Product.findById(productId);
+      for (let productId of products) {
+        console.log(productId);
+        const product = await Product.findOne({identityNumber:productId});
         if (product) {
-          validProductIds.push(productId);
+          validProductIds.push(product._id);  // Add valid product IDs to the array
         } else {
+          // Handle invalid product ID (optional)
           console.warn(`Product with ID ${productId} not found.`);
         }
       }

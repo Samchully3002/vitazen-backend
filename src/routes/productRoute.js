@@ -12,6 +12,7 @@ router.put('/products/:id', productController.editProduct);
 router.delete('/products/:id', productController.deleteProduct);
 router.get('/products', productController.getAllProducts);
 router.get('/products/:slug', productController.getProductBySlug);
+router.get('/productsid/:id', productController.getProductIdentityNumber);
 
 
 module.exports = router;
