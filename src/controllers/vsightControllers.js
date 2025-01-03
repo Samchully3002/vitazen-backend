@@ -112,10 +112,10 @@ exports.createPost = async (req, res) => {
 exports.editPost = async (req, res) => {
   try {
     const { title, body, image, slug, active } = req.body;
-    const imagePath = req.files ? req.files.image[0].path : undefined;
+    const imagePath = req.file ? req.file.path : undefined;    
 
     const updateData = {
-      title, body, active, slug, 
+      title, body, active, slug, image,
       image: imagePath || undefined // Only update image if a new one is provided
     };
 

@@ -10,6 +10,7 @@ const videoAdRoute = require('./routes/videoAdRoute.js');
 const promoRoute = require('./routes/promoRoute.js');
 const vsightRoute = require('./routes/vsightRoute.js');
 const contactRoute = require('./routes/contactusRoute.js');
+const dashboardRoute = require('./routes/dashboardRoute.js');
 const landingPageRoute = require('./routes/landingPageRoute.js');
 require('dotenv').config();
 const path = require('path');
@@ -45,6 +46,7 @@ app.use('/api', videoAdRoute);
 app.use('/api', promoRoute);
 app.use('/api', vsightRoute);
 app.use('/api', contactRoute);
+app.use('/api', dashboardRoute);
 app.use('/api', authRoutes); // Generate token mockup
 
 

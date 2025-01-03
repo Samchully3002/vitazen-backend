@@ -16,7 +16,7 @@ exports.createDiscount = async (req, res) => {
 
       // Check if each product ID exists
       for (let productId of products) {
-        console.log(productId);
+        
         const product = await Product.findOne({identityNumber:productId});
         if (product) {
           validProductIds.push(product._id);  // Add valid product IDs to the array
@@ -106,7 +106,7 @@ exports.getAllDiscount = async (req, res) => {
   
       // Validate product IDs
       for (let productId of products) {
-        console.log(productId);
+        
         const product = await Product.findOne({identityNumber:productId});
         if (product) {
           validProductIds.push(product._id);  // Add valid product IDs to the array

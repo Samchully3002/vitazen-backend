@@ -1,5 +1,5 @@
 const express = require('express');
-const upload = require('../middleware/uploadBlog'); // upload image middleware
+const uploadBlog = require('../middleware/uploadBlog'); // upload image middleware
 const { createPost, editPost, deletePost, getAllSight, getSightById } = require('../controllers/vsightControllers');
 
 const router = express.Router();
@@ -7,7 +7,7 @@ const router = express.Router();
 // Create Vsight Post
 router.post(
   '/vsight',
-  upload.fields([
+  uploadBlog.fields([
     { name: 'image', maxCount: 1 },
   ]),
   createPost
@@ -16,7 +16,15 @@ router.post(
 router.get('/vsight/:id', getSightById);
 
 // Edit Vsight Post
-router.put('/vsight/:id', upload.single('image'), editPost);
+router.put('/vsight/:id', (req, res, next) => {
+  uploadBlog.single('image')(req, res, (err) => {
+      if (err) {
+          console.error('Multer Error:', err);
+          return res.status(500).send('File upload failed');
+      }
+      next();
+  });
+}, editPost);
 
 // Delete Vsight Post
 router.delete('/vsight/:id', deletePost);

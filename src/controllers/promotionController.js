@@ -11,7 +11,7 @@ const fs = require('fs');
 exports.createPromo = async (req, res) => {
   try {
 
-      const { title, subtitle, textBtn, linkBtn, active, type } = req.body;
+      const { title, image, subtitle, textBtn, linkBtn, active, type } = req.body;
       
       // Process uploaded files
       const imagePath = req.files.image[0].path;
@@ -33,7 +33,14 @@ exports.createPromo = async (req, res) => {
 exports.editPromo = async (req, res) => {
   try {
     const { id } = req.params;
-    const { title, subtitle, textBtn, linkBtn, active, type } = req.body;
+    const { title, image, subtitle, textBtn, linkBtn, active, type } = req.body;
+
+    let imagePath;
+    if (req.file) { // req.file will be populated only if an image is uploaded
+        imagePath = req.files.image[0].path; 
+    }
+  
+
 
     const promo = await Promotion.findById(id);
     if (!promo) {
@@ -41,24 +48,18 @@ exports.editPromo = async (req, res) => {
     }
 
 
-    // Update fields
 
     const updatedFields = {
-      title,
-      subtitle,
-      textBtn,
-      linkBtn,
-      active,
-      type,
+      title, subtitle, textBtn, linkBtn, active, type,
       updatedAt: new Date(),
     };
 
-    // if (req.files.image) {
-    //   updatedFields.thumbnail = req.files.thumbnail[0].path;
-    // }
+    if (imagePath) {
+      updatedFields.image = imagePath;
+  }
 
 
-
+ 
     const updatedPromotion = await Promotion.findByIdAndUpdate(id, updatedFields, { new: true });
 
     res.status(200).json({ message: 'Promotion updated successfully', promo });
