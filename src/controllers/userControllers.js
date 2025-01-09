@@ -24,36 +24,11 @@ exports.getUser = async (req, res) => {
   }
 };
 
-// Get user by account number with Redis caching
-exports.getUserByAccountNumber = async (req, res) => {
-  const { accountNumber } = req.params;
-  const cacheKey = `acc:${accountNumber}`;
-  try {
-    // Check Redis cache
-    const cachedAccNumber = await getCache(cacheKey);
-    if (cachedAccNumber) {
-      return res.status(200).json(cachedAccNumber);
-    }
-
-    // If not in cache, fetch from MongoDB
-    const user = await User.findOne({ accountNumber });
-    if (!user) {
-      return res.status(404).json({ message: 'User not found' });
-    }
-
-    // Store fetched data in Redis
-    await setCache(cacheKey, user, 3600); // Cache for 1 hour
-
-    res.status(200).json(user);
-  } catch (error) {
-    res.status(500).json({ message: 'Error fetching user', error: error.message });
-  }
-};
 
 // Get user by identity number with Redis caching
 exports.getUserByIdentityNumber = async (req, res) => {
-  const { identityNumber } = req.params;
-  const cacheKey = `id:${identityNumber}`;
+  const { id } = req.params;
+  const cacheKey = `id:${id}`;
   try {
     // Check Redis cache
     const cachedIdNumber = await getCache(cacheKey);
@@ -62,7 +37,7 @@ exports.getUserByIdentityNumber = async (req, res) => {
     }
 
     // If not in cache, fetch from MongoDB
-    const user = await User.findOne({ identityNumber });
+    const user = await User.findById(id);
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
@@ -80,7 +55,7 @@ exports.getUserByIdentityNumber = async (req, res) => {
 // Update User By Identity Number
 exports.updateById = async (req, res) => {
   const { id } = req.params;
-  const { userName, accountNumber, emailAddress, identityNumber } = req.body;
+  const { userName, fullName, emailAddress, password } = req.body;
   try {
         // Find the current document
         const existingItem = await User.findById(id);
@@ -90,10 +65,11 @@ exports.updateById = async (req, res) => {
         }
         // Check if each field has changed to avoid redundant updates
         const updateFields = {};
+        if (fullName && fullName !== existingItem.fullName) updateFields.fullName = fullName;
         if (userName && userName !== existingItem.userName) updateFields.userName = userName;
-        if (accountNumber && accountNumber !== existingItem.accountNumber) updateFields.accountNumber = accountNumber;
         if (emailAddress && emailAddress !== existingItem.emailAddress) updateFields.emailAddress = emailAddress;
-        if (identityNumber && identityNumber !== existingItem.identityNumber) updateFields.identityNumber = identityNumber;
+        if (password) updateFields.password = password;
+        
 
          // If no fields have changed, return early
         if (Object.keys(updateFields).length === 0) {

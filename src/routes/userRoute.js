@@ -8,10 +8,9 @@ const router = express.Router();
 
 router.post('/users', userController.createUser);
 router.get('/users', userController.getUser);
-router.get('/users/account/number/:accountNumber', userController.getUserByAccountNumber);
-router.get('/users/account/id/:identityNumber', userController.getUserByIdentityNumber);
-router.put('/users/account/:id', userController.updateById);
-router.delete('/users/account/:id', userController.deleteUserById);
+router.get('/users/:id', userController.getUserByIdentityNumber);
+router.put('/users/:id', userController.updateById);
+router.delete('/users/:id', userController.deleteUserById);
 
 
 module.exports = router;

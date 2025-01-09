@@ -4,10 +4,9 @@ const mongoose = require('mongoose');
 const bcrypt = require('bcrypt');
 
 const userSchema = new mongoose.Schema({
-  userName: { type: String, required: true },
-  accountNumber: { type: String, required: true, unique: true },
+  fullName: { type: String, required: true },
+  userName: { type: String, required: true, unique: true },
   emailAddress: { type: String, required: true, unique: true },
-  identityNumber: { type: String, required: true, unique: true },
   password: { type: String, required: true },
   lastLogin: { type: Date, default: null },
 });
@@ -20,15 +19,34 @@ userSchema.pre('save', async function (next) {
   next();
 });
 
+// Pre-findOneAndUpdate middleware for hashing password during update operations
+userSchema.pre('findOneAndUpdate', async function (next) {
+  const update = this.getUpdate();
+  if (update && update.password) {
+    const salt = await bcrypt.genSalt(10);
+    update.password = await bcrypt.hash(update.password, salt);
+    this.setUpdate(update);
+  }
+  next();
+});
+
+
+// Pre-updateOne middleware (optional, if needed for other operations)
+userSchema.pre('updateOne', async function (next) {
+  const update = this.getUpdate();
+  if (update && update.password) {
+    const salt = await bcrypt.genSalt(10);
+    update.password = await bcrypt.hash(update.password, salt);
+    this.setUpdate(update);
+  }
+  next();
+});
+
 // Method to compare input password with hashed password
 userSchema.methods.comparePassword = async function (inputPassword) {
   return bcrypt.compare(inputPassword, this.password);
 };
 
-
-
-userSchema.index({ accountNumber: 1 });
-userSchema.index({ identityNumber: 1 });
 
 const User = mongoose.model('User', userSchema);
 module.exports = User;
