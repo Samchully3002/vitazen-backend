@@ -8,6 +8,8 @@ const vsightSchema = new mongoose.Schema({
   body: { type: String, required: true},
   active: {type: String, enum: ['true', 'false'], required: true},
   image: { type: String, required: true },
+  category: [{ type: String }],
+  favourite: {type: String, enum: ['true', 'false']},
   createdAt: { type: Date, default: Date.now }
 });
 

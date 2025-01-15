@@ -1,6 +1,7 @@
 //controllers/dashboardController.js
 
 const Product = require('../models/product');
+const Discount = require('../models/discount');
 const Promotion = require('../models/promotion');
 
 const Video = require('../models/reviewAd');
@@ -9,14 +10,26 @@ const Review = require('../models/reviewWeb');
 // Get all products
 exports.getProducts = async (req, res) => {
     try {
+
+        const discounts = await Discount.find().populate('products');
+        const discountedProductIds = new Set();
+
+         // Collect product IDs with discounts
+         discounts.forEach(discount => {
+          discount.products.forEach(productId => {
+              discountedProductIds.add(productId.toString());
+          });
+        });
+
+
         // Count total products
         const totalProducts = await Product.countDocuments();
 
         // Count products with a discount
-        const productsWithDiscount = await Product.countDocuments({ discount: { $exists: true, $ne: null } });
+        const productsWithDiscount = discountedProductIds.size;
 
         // Count product without discount
-        const productsWithoutDiscount = await Product.countDocuments({ discount: { $exists: false } });
+        const productsWithoutDiscount = totalProducts - productsWithDiscount;
 
         res.status(200).json({
           success: true,

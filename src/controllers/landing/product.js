@@ -33,7 +33,7 @@ exports.getAllProducts = async (req, res) => {
         // Fetch Discount for Products
         for (let product of products) {
             // Get the current discount for the product
-            const discount = await Discount.findOne({ productId: product._id, validUntil: { $gte: new Date() } });
+            const discount = await Discount.findOne({ products: product._id, validUntil: { $gte: new Date() } });
             product.finalPrice = product.price;
 
             if (discount) {

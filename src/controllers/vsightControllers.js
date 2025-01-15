@@ -22,7 +22,7 @@ exports.getAllSight = async (req, res) => {
   
       // Fetch paginated products
       const vsights = await Vsight.find()
-        .select('title slug body image')
+        .select('title slug body image favourite category active')
         .sort({ createdAt: -1 }) // Sort by creation date (newest first)
         .skip((pageNumber - 1) * limitNumber) // Skip products based on the current page
         .limit(limitNumber); // Limit products per page
@@ -87,13 +87,13 @@ exports.createPost = async (req, res) => {
   try {
 
     generateSlug(req, res, async () => {
-      const { title, body, image, slug, active } = req.body;
+      const { title, body, image, slug, active, favourite, category } = req.body;
       
       // Process uploaded files
       const imagePath = req.files.image[0].path;
   
       const newBlog = new Vsight({
-        title, body, image, active, slug, 
+        title, body, image, active, slug, favourite, category,
         image: imagePath
       });
   
@@ -111,11 +111,11 @@ exports.createPost = async (req, res) => {
 // Edit existing vsight post
 exports.editPost = async (req, res) => {
   try {
-    const { title, body, image, slug, active } = req.body;
+    const { title, body, image, slug, active, favourite, category } = req.body;
     const imagePath = req.file ? req.file.path : undefined;    
 
     const updateData = {
-      title, body, active, slug, image,
+      title, body, active, slug, image, favourite, category,
       image: imagePath || undefined // Only update image if a new one is provided
     };
 

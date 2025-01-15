@@ -239,7 +239,7 @@ exports.getHomeSight = async (req, res) => {
     
         // Fetch paginated products
         const vsights = await Vsight.find({active:true})
-          .select('title slug body image')
+          .select('title slug body image favourite category')
           .sort({ createdAt: -1 }) // Sort by creation date (newest first)
           .limit(limitNumber); // Limit products per page
 

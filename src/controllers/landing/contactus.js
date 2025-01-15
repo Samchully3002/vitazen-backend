@@ -24,8 +24,8 @@ exports.submitMessage = async (req, res) => {
       await message.save();
   
       return res.status(201).json({
+        status: 'success',
         message: 'Message already sent',
-        message,
       });
     } catch (error) {
       console.error(error);
